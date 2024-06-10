@@ -1,0 +1,10 @@
+\__pycache__
+.DS_Store
+
+*.pth
+
+*.log
+*.csv
+
+test_gpt
+train_gpt
