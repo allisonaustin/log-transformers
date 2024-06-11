@@ -43,6 +43,46 @@ class AdditiveAttention(nn.Module):
         #     weights = dropout(weights)
         p_attn = torch.tanh(weights)
         return p_attn * self.v, p_attn
+
+class HierarchicalAttention(nn.Module):
+    """
+    'Hierarchical Attention Network' (HAN)
+    https://buomsoo-kim.github.io/attention/2020/03/26/Attention-mechanism-16.md/
+    """
+    def __init__(self, batch_size, d_model, h):
+        super().__init__()
+        self.d_k = d_model // h
+        self.h = h
+        self.word_attn = nn.Linear(d_model, d_model)
+        self.u_w = nn.Linear(d_model, batch_size, bias=False)
+        self.sent_attn = nn.Linear(d_model, d_model, bias=False)
+        self.u_s = nn.Linear(d_model, 1, bias=False)
+        self.dense_out = nn.Linear(d_model, h)
+        self.log_softmax = nn.LogSoftmax(dim=1)
+        self.output_linear = nn.Linear(d_model, d_model)
+
+    def forward(self, query, key, x, mask=None):
+        batch_size, seq_len, _ = x.size()
+
+        # (1) Apply word-level attention
+        wordenc_out = torch.zeros((batch_size, seq_len, x.size(-1))).to(x.device)
+        for i in range(batch_size):
+            # (2) Compute word-level attention weights
+            u_word = torch.tanh(self.word_attn(x[i]))
+            # word_weights = F.softmax(self.u_w(u_word), dim=0)
+            word_weights = F.softmax(self.u_w(u_word), dim=1).transpose(0, 1).unsqueeze(-1)
+            # (3) Compute sentence-level representation
+            sent_summ_vec = torch.sum(x[i] * word_weights, dim=0)
+            wordenc_out[i] = sent_summ_vec
+
+        # (4) Apply sentence-level attention
+        u_sent = torch.tanh(self.sent_attn(wordenc_out))
+        sent_weights = F.softmax(self.u_s(u_sent), dim=0)
+
+        x = wordenc_out * sent_weights
+        x = x.view(batch_size, seq_len, self.h * self.d_k)
+        x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.h * self.d_k) 
+        return self.output_linear(x)
     
 class MultiHeadedAttention(nn.Module):
     """
@@ -211,16 +251,23 @@ class TransformerBlock(nn.Module):
     Transformer = MultiHead_Attention + Feed_Forward with sublayer connection
     """
 
-    def __init__(self, hidden, attn_heads, feed_forward_hidden, dropout, additive=False):
+    def __init__(self, hidden, attn_heads, feed_forward_hidden, dropout, attn):
         """
         :param hidden: hidden size of transformer
         :param attn_heads: head sizes of multi-head attention
         :param feed_forward_hidden: feed_forward_hidden, usually 4*hidden_size
         :param dropout: dropout rate
+        :param attn: attention mechanism
         """
 
         super().__init__() 
-        self.attention = MultiHeadedAttention(h=attn_heads, d_model=hidden, additive=additive)
+        if attn == 'additive': 
+            self.attention = MultiHeadedAttention(h=attn_heads, d_model=hidden, additive=True)
+        elif attn == 'hierarchical':
+            self.attention = HierarchicalAttention(batch_size=32, d_model=hidden, h=attn_heads)
+        else:
+            self.attention = MultiHeadedAttention(h=attn_heads, d_model=hidden, additive=False)
+        
         self.feed_forward = PositionwiseFeedForward(d_model=hidden, d_ff=feed_forward_hidden, dropout=dropout)
         self.input_sublayer = SublayerConnection(size=hidden, dropout=dropout)
         self.output_sublayer = SublayerConnection(size=hidden, dropout=dropout)
@@ -233,7 +280,7 @@ class TransformerBlock(nn.Module):
 
 
 class BERT(nn.Module):
-    def __init__(self, vocab_size, max_len=512, hidden=768, n_layers=12, attn_heads=12, dropout=0.1, is_logkey=True, is_time=False, additive=False):
+    def __init__(self, vocab_size, max_len=512, hidden=768, n_layers=12, attn_heads=12, dropout=0.1, is_logkey=True, is_time=False, attn=None):
         """
         :param vocab_size: total vocabulary size
         :param hidden: hidden size of transformer
@@ -249,7 +296,7 @@ class BERT(nn.Module):
         self.embedding = BERTEmbedding(vocab_size=vocab_size, embed_size=hidden, max_len=512, dropout=dropout, is_logkey=is_logkey, is_time=is_time)
 
         self.transformer_blocks = nn.ModuleList(
-            [TransformerBlock(hidden, attn_heads, hidden * 4, dropout, additive) for _ in range(n_layers)])
+            [TransformerBlock(hidden, attn_heads, hidden * 4, dropout, attn) for _ in range(n_layers)])
 
 
     def forward(self, x, segment_label=None, time_info=None):
