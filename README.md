@@ -7,7 +7,7 @@ ECS 289L Deep Learning Final Project
 This repository contains code for two LLMs (GPT and BERT) trained on HPC log data for predicting anomalous log sequences. The code includes log parsing techniques, dataset information, model implementation, and evaluation logic/results. 
 
 ### Data
-The datasets used to train the minGPT and LogBERT models are from System 20 of the high performance computing cluster at the Los Alamos National Laboratories (LANL) and the BlueGene/L supercomputer system at Lawrence Livermore National Labs (LLNL). The datasets are open-source and available for download at https://github.com/logpai/loghub.
+The datasets used to train the minGPT and LogBERT models are from System 20 of the high performance computing cluster at the Los Alamos National Laboratories (LANL) and the BlueGene/L supercomputer system at Lawrence Livermore National Labs (LLNL). The datasets are open-source and available for download at https://github.com/logpai/loghub, https://lanl.gov/projects//ultrascale-systems-research-center/data/failure-data.php, and https://www.kaggle.com/datasets/kingslayer99/bgl-dataset.
 
 ### Results
 !
