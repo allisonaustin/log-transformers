@@ -57,8 +57,6 @@ class HierarchicalAttention(nn.Module):
         self.u_w = nn.Linear(d_model, batch_size, bias=False)
         self.sent_attn = nn.Linear(d_model, d_model, bias=False)
         self.u_s = nn.Linear(d_model, 1, bias=False)
-        self.dense_out = nn.Linear(d_model, h)
-        self.log_softmax = nn.LogSoftmax(dim=1)
         self.output_linear = nn.Linear(d_model, d_model)
 
     def forward(self, query, key, x, mask=None):
