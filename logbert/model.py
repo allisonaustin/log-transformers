@@ -34,19 +34,15 @@ class AdditiveAttention(nn.Module):
         super().__init__()
         self.W1 = nn.Linear(d_k, d_k)
         self.W2 = nn.Linear(d_k, d_k) 
-        self.v = nn.Linear(d_k, 1)
+        self.v = torch.nn.Parameter(
+            torch.FloatTensor(d_k).uniform_(-0.1, 0.1))
 
     def forward(self, query, key, value, mask=None, dropout=None):
-        batch_size, _, _, hidden_dim = query.size()
-        print('query size', query.size())
-        query = query.reshape(batch_size, -1, hidden_dim)
-        value = value.reshape(batch_size, -1, hidden_dim)
         weights = self.W1(query) + self.W2(value)
         # if dropout is not None:
         #     weights = dropout(weights)
-        alignment_scores = torch.tanh(weights)
-        p_attn = self.v(alignment_scores).squeeze(dim=-1)
-        return p_attn @ value, p_attn
+        p_attn = torch.tanh(weights)
+        return p_attn * self.v, p_attn
     
 class MultiHeadedAttention(nn.Module):
     """
@@ -82,11 +78,8 @@ class MultiHeadedAttention(nn.Module):
         x, attn = self.attention(query, key, value, mask=mask, dropout=self.dropout)
 
         # 3) "Concat" using a view and apply a final linear.
-        if (self.additive):
-            x = x.view(batch_size, -1, self.h * self.d_k)
-        else:
-            x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.h * self.d_k)
-            
+        x = x.transpose(1, 2).contiguous().view(batch_size, -1, self.h * self.d_k)
+                
         return self.output_linear(x)
     
 
