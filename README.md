@@ -4,13 +4,13 @@
 ECS 289L Deep Learning Final Project
 
 ### About
-This repository contains code for two LLMs (GPT and BERT) trained on HPC log data for predicting anomalous log sequences. The code includes log parsing techniques, dataset information, model implementation, and evaluation logic/results. 
+This repository contains code for two LLMs (GPT and BERT) trained on HPC log data to predict anomalous log sequences. The code includes log parsing techniques, dataset information, model implementations, and evaluation logic/results. 
 
 ### Data
-The datasets used to train the minGPT and LogBERT models are from System 20 of the high performance computing cluster at the Los Alamos National Laboratories (LANL) and the BlueGene/L supercomputer system at Lawrence Livermore National Labs (LLNL). The datasets are open-source and available for download at https://github.com/logpai/loghub, https://lanl.gov/projects//ultrascale-systems-research-center/data/failure-data.php, and https://www.kaggle.com/datasets/kingslayer99/bgl-dataset.
+The datasets used to train the minGPT and LogBERT models are from System 20 of the high-performance computing cluster at the Los Alamos National Laboratory (LANL) and the BlueGene/L supercomputer system at Lawrence Livermore National Labs (LLNL). The datasets are open-source and available for download at https://github.com/logpai/loghub, https://lanl.gov/projects//ultrascale-systems-research-center/data/failure-data.php, and https://www.kaggle.com/datasets/kingslayer99/bgl-dataset.
 
 ### Models
-The BERT model implementation is based on LogBERT (Guo, 2021) and the GPT model implementation is based on minGPT (Karpathy, 2020). We have simplified the original codes, changed the evaluation tasks to fit our data, and added different attention mechanisms for experimentation. 
+The BERT model implementation is based on LogBERT (Guo, 2021) and the GPT model implementation is based on minGPT (Karpathy, 2020). We have simplified the original codebases, changed the evaluation tasks to fit our data, and added different attention mechanisms for experimentation. 
 
 Authors: Allison Austin, Halil Ozgur Demir
 
